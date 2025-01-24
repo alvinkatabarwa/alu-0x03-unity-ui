@@ -1,84 +1,95 @@
+﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
-
-    private Rigidbody playerBody;
-    public float speed = 10.0f;
+    private Rigidbody Player;
+    public float speed = 1000f;
     private int score = 0;
     public int health = 5;
-
+    public Text scoreText;
+    public Text healthText;
+    public Text winLoseText;
+    public Image winLoseBG;
     // Start is called before the first frame update
     void Start()
     {
-        playerBody = GetComponent<Rigidbody>();
+        Player = GetComponent<Rigidbody>();
+    }
+
+    void Update()
+    {
+        if (health == 0)
+        {
+            winLoseText.color = Color.white;
+            winLoseText.text = $"Game Over!";
+            winLoseBG.color = Color.red;
+            winLoseBG.gameObject.SetActive(true);
+            StartCoroutine(LoadScene(3f));
+        }
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey("w"))
         {
-           playerBody.AddForce(Vector3.forward * speed);
+            Player.AddForce(0, 0, speed * Time.deltaTime);
         }
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey("s"))
         {
-          playerBody.AddForce(Vector3.back * speed);
+            Player.AddForce(0, 0, -speed * Time.deltaTime);
         }
-
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey("d"))
         {
-            playerBody.AddForce(Vector3.left * speed);
+            Player.AddForce(speed * Time.deltaTime, 0, 0);
         }
-
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey("a"))
         {
-            playerBody.AddForce(Vector3.right * speed);
+            Player.AddForce(-speed * Time.deltaTime, 0, 0);
         }
-
-        // Check if health equals 0 and reload the game
-
-        if (health == 0)
-        {
-            Debug.Log("Game Over!");
-
-            // Reload the game
-            // Scores resets to 0
-            // Health resets to 5
-
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-
-        }
-
-
     }
 
-    // Score is increased when the player collides with coin
     void OnTriggerEnter(Collider other)
     {
-        // check for the tag 'Pickup'
         if (other.CompareTag("Pickup"))
         {
             score++;
-            Debug.Log("Score: " + score);
-
+            // Debug.Log($"Score: {score}");
+            SetScoreText();
             Destroy(other.gameObject);
         }
-
-        // Traps
         if (other.CompareTag("Trap"))
         {
             health--;
-            Debug.Log("Health: " + health);
+            SetHealthText();
         }
-
-        //Win
         if (other.CompareTag("Goal"))
         {
-            Debug.Log("You win!");
+            // Debug.Log($"You win!");
+            winLoseText.color = Color.black;
+            winLoseText.text = $"You Win!";
+            winLoseBG.color = Color.green;
+            winLoseBG.gameObject.SetActive(true);
+            StartCoroutine(LoadScene(3f));
         }
+    }
+
+    void SetScoreText()
+    {
+        scoreText.text = $"Score: {score}";
+    }
+
+    void SetHealthText()
+    {
+        healthText.text = $"Health: {health}";
+    }
+
+    IEnumerator LoadScene(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
